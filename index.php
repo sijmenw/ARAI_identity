@@ -66,22 +66,48 @@
 				}
 				return $arr;
 			}
+			
+			function printArray($arr) {
+				if (!is_array($arr)) {
+					return "";
+				}
+				$arr_str = "";
+				recursiveArrayToString($arr, $arr_str);
+				return $arr_str;
+			}
+			
+			function recursiveArrayToString($arr, &$str) {
+				$str .= "<ul>";
+				foreach($arr as $key => $value) {
+					$str .= "<li>" . $key;
+					if (is_array($value)) {
+						recursiveArrayToString($value, $str);
+					} else {
+						$str .= ": " . $value;
+					}
+					$str .= "</li>";
+				}
+				$str .= "</ul>";
+			}
 		?>
 	
 		<?php
-			$person = "Frank_van_Harmelen";
-			$lodDatasets = "http://index.lodlaundromat.org/r2d/";
-			$db_prefix = "http://dbpedia.org/resource/";
-			$limit = "limit=1000";
+			$person = 'Frank_van_Harmelen';
+			$lodDatasets = 'http://index.lodlaundromat.org/r2d/';
+			$lodEndpoint = 'http://ldf.lodlaundromat.org/';
+			$db_prefix = 'http://dbpedia.org/resource/';
+			$owlSameAs = 'http://www.w3.org/2002/07/owl#sameAs';
+			$person_uri = $db_prefix . $person;
+			$limit = 'limit=1000';
 			
-			$endpoints_query = $lodDatasets . $db_prefix . $person . "?" . $limit;
+			$endpoints_query = $lodDatasets . urlencode($person_uri) . "?" . $limit;
 			
 			echo "<div style=\"height:40px;\">First Query: " . $endpoints_query . "</div>";
 			
 			// Get cURL resource
 			$curl = curl_init();
 			// Set some options - we are passing in a useragent too here
-				curl_setopt_array($curl, array(
+			curl_setopt_array($curl, array(
 				CURLOPT_RETURNTRANSFER => 1,
 				CURLOPT_URL => $endpoints_query,
 				CURLOPT_USERAGENT => 'Sample cURL Request'
@@ -105,10 +131,58 @@
 			$endpoint_list .= '</ol>';
 			
 			// Print out endpoints
-			echo "<div style=\"width:350px;height:460px;overflow:scroll;\">Endpoints (n=" . $endpointCount . "):\r\n" . $endpoint_list . "</div>";
+			echo "<div style=\"width:350px;height:300px;overflow:scroll;\">Endpoints (n=" . $endpointCount . "):\r\n" . $endpoint_list . "</div>";
 			
 			// Loop over endpoints to find owl:sameAs statements...
-			// ...to do...
+			$objects_arr = array(array());
+			$subject_arr = array(array());
+			//foreach ($resp_arr as $endpoint) {
+				$sameAsObjectsQuery = $lodEndpoint . '0b8d263e4c8023c64e85e77e2d0a12d1' . '?subject=' . urlencode($person_uri) . '&predicate=' . urlencode($owlSameAs) . '&object=';
+				$sameAsSubjectsQuery = $lodEndpoint . '0b8d263e4c8023c64e85e77e2d0a12d1' . '?subject=' . '&predicate=' . urlencode($owlSameAs) . '&object=' . urlencode($person_uri);
+				
+				echo "<div style=\"height:40px;\">Second Query: " . $sameAsObjectsQuery . "</div>";
+				
+				// Get cURL resource
+				$curl = curl_init();
+				// Set some options - we are passing in a useragent too here
+				curl_setopt_array($curl, array(
+					CURLOPT_RETURNTRANSFER => 1,
+					CURLOPT_URL => $sameAsObjectsQuery,
+					CURLOPT_USERAGENT => 'Sample cURL Request',
+					CURLOPT_HTTPHEADER => array('Accept: application/json')
+				));
+				// Send the request & save response
+				$sameAsObjects = curl_exec($curl);
+				// Decode json response into array
+				$sameAsObjects_arr = json_decode($sameAsObjects, true);
+				
+				$sameAsObjects_str = "<div style=\"height:300px;overflow:scroll;\">";
+				$sameAsObjects_str .= printArray($sameAsObjects_arr);
+				$sameAsObjects_str .= "</div>";
+				
+				echo $sameAsObjects_str;
+				
+				echo "<div style=\"height:40px;\">Third Query: " . $sameAsSubjectsQuery . "</div>";
+				
+				// Rest the query for the subjects
+				curl_setopt_array($curl, array(
+					CURLOPT_RETURNTRANSFER => 1,
+					CURLOPT_URL => $sameAsSubjectsQuery,
+					CURLOPT_USERAGENT => 'Sample cURL Request',
+					CURLOPT_HTTPHEADER => array('Accept: application/json')
+				));
+				// Send the new request & save response
+				$sameAsSubjects = curl_exec($curl);
+				// Decode json response into array
+				$sameAsSubjects_arr = json_decode($sameAsSubjects, true);
+				
+				$sameAsSubjects_str = "<div style=\"height:300px;overflow:scroll;\">";
+				$sameAsSubjects_str .= printArray($sameAsSubjects_arr);
+				$sameAsSubjects_str .= "</div>";
+				
+				echo $sameAsSubjects_str;
+			//}
+			
 		?>
 	</body>
 </html>
