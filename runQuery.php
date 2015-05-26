@@ -134,9 +134,7 @@
 			echo "<div style=\"width:350px;height:300px;overflow:scroll;\">Endpoints (n=" . $endpointCount . "):\r\n" . $endpoint_list . "</div>";
 			
 			// Loop over endpoints to find owl:sameAs statements...
-			$objects_arr = array(array());
-			$subject_arr = array(array());
-			$sameAs_arr = array(array());
+			$uri_arr = array();
 			foreach ($resp_arr as $endpoint) {
 				$sameAsObjectsQuery = $lodEndpoint . $endpoint . '?subject=' . urlencode($person_uri) . '&predicate=' . urlencode($owlSameAs) . '&object=';
 				$sameAsSubjectsQuery = $lodEndpoint . $endpoint . '?subject=' . '&predicate=' . urlencode($owlSameAs) . '&object=' . urlencode($person_uri);
@@ -165,7 +163,7 @@
 				
 				//echo "<div style=\"height:40px;\">Third Query: " . $sameAsSubjectsQuery . "</div>";
 				
-				// Rest the query for the subjects
+				// Reset the query for the subjects
 				curl_setopt_array($curl, array(
 					CURLOPT_RETURNTRANSFER => 1,
 					CURLOPT_URL => $sameAsSubjectsQuery,
@@ -183,26 +181,64 @@
 				
 				//echo $sameAsSubjects_str;
 				
-				// Insert sameAs (subjects) URI's into array
+				// Insert sameAs (subjects) URI's into array (no duplicate check yet)
 				foreach($sameAsObjects_arr[0] as $key => $value) {
 					if (/*key == object*/) {
-						$sameAs_arr[$endpoint][] = $value;
+						$uri_arr[] = $value;
+						$uri_arr[] = $endpoint;
 					}
 				}
 				// Insert sameAs (objects) URI's into array
 				foreach($sameAsSubjects_arr[0] as $key => $value) {
 					if (/*key == subject*/) {
-						$sameAs_arr[$endpoint][] = $value;
+						$uri_arr[] = $value;
+						$uri_arr[] = $endpoint;
 					}
 				}
-				// $sameAs_arr now contains all sameAs URI's of $person_uri (with duplicates).
-				// Loop over all $sameAs_arr URI's to find all their information
-				// Add each URI to another array (without duplicates)
-				// Check that array everytime a new URI needs to be queried to avoid redundant querying.
-				// Check the information for each person, if another sameAs statement is found, add that
-				// URI to the $sameAs_arr continue looping.
 			}
 			
+			// Loop over all $sameAs_arr URI's to find all their triples
+			$uri_arr_unique = array();
+			$triples_per_uri = array(array());
+			$uri_count = 0;
+			for ($i = 0; $i < count($uri_arr) - 1; $i += 2) {
+				$uri_value = $uri_arr[$i];
+				$uri_endpo = $uri_arr[($i + 1)];
+				$uri_query = $lodEndpoint . $uri_endpo . '?subject=' . urlencode($uri_value) . '&predicate=' . '&object=';
+				
+				// Check if this URI has already been queried
+				// Add to the list if it is not.
+				if (in_array($uri_value, $uri_arr_unique))
+					continue;
+				else
+					$uri_arr_unique[] = $uri_value;
+				
+				curl_setopt_array($curl, array(
+					CURLOPT_RETURNTRANSFER => 1,
+					CURLOPT_URL => $uri_query,
+					CURLOPT_USERAGENT => 'Sample cURL Request',
+					CURLOPT_HTTPHEADER => array('Accept: application/json')
+				));
+				$query_resp = curl_exec($curl);
+				$query_arr = json_decode($query_resp, true);
+				
+				// Add the person with its endpoint and triples to a twodimensional array
+				$triples_per_uri[$uri_count][] = $uri_value;
+				$triples_per_uri[$uri_count][] = $uri_endpo;
+				$triples_per_uri[$uri_count][] = $query_arr;
+				$uri_count++;
+				
+				// Check if this URI (array of triples) contains new sameAs statements
+				// ...
+				// If it does add the object URI of that/those statement(s) to the $uri_arr.
+				// Check to see if the $uri_arr does not already contain this/these new URI('s)
+			}
+			
+			// Output $triples_per_uri
+			// $triples_per_uri_str = "<div style=\"height:300px;overflow:scroll;\">";
+			// $triples_per_uri_str .= printArray($triples_per_uri);
+			// $triples_per_uri_str .= "</div>";
+			// echo $triples_per_uri_str;
 		?>
 	</body>
 </html>
