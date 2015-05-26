@@ -136,11 +136,12 @@
 			// Loop over endpoints to find owl:sameAs statements...
 			$objects_arr = array(array());
 			$subject_arr = array(array());
-			//foreach ($resp_arr as $endpoint) {
-				$sameAsObjectsQuery = $lodEndpoint . '0b8d263e4c8023c64e85e77e2d0a12d1' . '?subject=' . urlencode($person_uri) . '&predicate=' . urlencode($owlSameAs) . '&object=';
-				$sameAsSubjectsQuery = $lodEndpoint . '0b8d263e4c8023c64e85e77e2d0a12d1' . '?subject=' . '&predicate=' . urlencode($owlSameAs) . '&object=' . urlencode($person_uri);
+			$sameAs_arr = array(array());
+			foreach ($resp_arr as $endpoint) {
+				$sameAsObjectsQuery = $lodEndpoint . $endpoint . '?subject=' . urlencode($person_uri) . '&predicate=' . urlencode($owlSameAs) . '&object=';
+				$sameAsSubjectsQuery = $lodEndpoint . $endpoint . '?subject=' . '&predicate=' . urlencode($owlSameAs) . '&object=' . urlencode($person_uri);
 				
-				echo "<div style=\"height:40px;\">Second Query: " . $sameAsObjectsQuery . "</div>";
+				//echo "<div style=\"height:40px;\">Second Query: " . $sameAsObjectsQuery . "</div>";
 				
 				// Get cURL resource
 				$curl = curl_init();
@@ -160,9 +161,9 @@
 				$sameAsObjects_str .= printArray($sameAsObjects_arr);
 				$sameAsObjects_str .= "</div>";
 				
-				echo $sameAsObjects_str;
+				//echo $sameAsObjects_str;
 				
-				echo "<div style=\"height:40px;\">Third Query: " . $sameAsSubjectsQuery . "</div>";
+				//echo "<div style=\"height:40px;\">Third Query: " . $sameAsSubjectsQuery . "</div>";
 				
 				// Rest the query for the subjects
 				curl_setopt_array($curl, array(
@@ -180,8 +181,27 @@
 				$sameAsSubjects_str .= printArray($sameAsSubjects_arr);
 				$sameAsSubjects_str .= "</div>";
 				
-				echo $sameAsSubjects_str;
-			//}
+				//echo $sameAsSubjects_str;
+				
+				// Insert sameAs (subjects) URI's into array
+				foreach($sameAsObjects_arr[0] as $key => $value) {
+					if (/*key == object*/) {
+						$sameAs_arr[$endpoint][] = $value;
+					}
+				}
+				// Insert sameAs (objects) URI's into array
+				foreach($sameAsSubjects_arr[0] as $key => $value) {
+					if (/*key == subject*/) {
+						$sameAs_arr[$endpoint][] = $value;
+					}
+				}
+				// $sameAs_arr now contains all sameAs URI's of $person_uri (with duplicates).
+				// Loop over all $sameAs_arr URI's to find all their information
+				// Add each URI to another array (without duplicates)
+				// Check that array everytime a new URI needs to be queried to avoid redundant querying.
+				// Check the information for each person, if another sameAs statement is found, add that
+				// URI to the $sameAs_arr continue looping.
+			}
 			
 		?>
 	</body>
