@@ -67,24 +67,43 @@ function parseResponseResults($str) {
 }
 
 function printArray($arr) {
-	if (!is_array($arr)) {
-		return "";
-	}
-	$arr_str = "";
-	recursiveArrayToString($arr, $arr_str);
-	return $arr_str;
+    if (!is_array($arr)) {
+        return "";
+    }
+    $arr_str = "";
+    recursiveArrayToString($arr, $arr_str);
+    return $arr_str;
 }
-			
+
 function recursiveArrayToString($arr, &$str) {
-	$str .= "<ul>";
-	foreach($arr as $key => $value) {
-		$str .= "<li>" . $key;
-		if (is_array($value)) {
-			recursiveArrayToString($value, $str);
-		} else {
-			$str .= ": " . $value;
-		}
-		$str .= "</li>";
-	}
-	$str .= "</ul>";
+    $str .= "<ul>";
+    foreach($arr as $key => $value) {
+        $str .= "<li>" . $key;
+        if (is_array($value)) {
+            recursiveArrayToString($value, $str);
+        } else {
+            $str .= ": " . $value;
+        }
+        $str .= "</li>";
+    }
+    $str .= "</ul>";
+}
+
+function addSameAsStatements($uri, $sameAs, $arr, &$uri_arr) {
+    if (!is_array($arr) || count($arr) < 1) {
+        return "";
+    }
+    foreach($arr as $key => $value) {
+        if ($key == $uri) {
+            foreach($value as $key2 => $value2) {
+                if ($key == $sameAs) {
+                    foreach($value2 as $value3) {
+                        if (!in_array($value3['value'], $uri_arr)) {
+                            $uri_arr[] = $value3['value'];
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
