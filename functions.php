@@ -6,31 +6,6 @@
  * Time: 20:52
  */
 
-function parseResponseAmount($str) {
-    $i = 0;
-
-    $startAmountParse = false;
-
-    $amount = "";
-
-    $strlen = strlen($str);
-
-    while ($i++ < $strlen) {
-        $char = $str[$i];
-        if ($char == ':') {
-            $startAmountParse = true;
-            continue;
-        } else if ($char == ',') {
-            $startAmountParse = false;
-            break;
-        }
-        if ($startAmountParse == true) {
-            $amount .= $char;
-        }
-    }
-    return intval($amount);
-}
-
 function parseResponseResults($str) {
     $arr = array();
 
@@ -106,4 +81,16 @@ function addSameAsStatements($uri, $sameAs, $arr, &$uri_arr) {
             }
         }
     }
+}
+
+function getPName($uri) {
+	$offset = 0;
+	for ($i = strlen($uri) - 1; $i >= 0; $i--) {
+		if ($uri[$i] == '#' || $uri[$i] == '/') {
+			return substr($uri, $offset);
+		} else {
+			$offset--;
+		}
+	}
+	return '';
 }
