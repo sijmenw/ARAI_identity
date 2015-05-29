@@ -4,7 +4,7 @@
 
 ?>
 
-<form action="runQuery.php" method="post">
+<form action="runQuery.php" method="GET">
 Query input:<br>
 <input type="text" name="queryInput" value="Frank_van_Harmelen">
 <br><br>
