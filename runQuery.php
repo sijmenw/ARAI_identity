@@ -52,8 +52,8 @@ curl_setopt_array($curl, array(
 
 // Send the request & save response to $resp
 
-if( $first_resp = curl_exec($curl) ){
-    echo "CURL EXECUTED@1<br>";
+if(!$first_resp = curl_exec($curl) ){
+    echo "CURL FAILED@1<br>";
 };
 
 // Close request to clear up some resources
@@ -91,8 +91,8 @@ foreach ($first_resp_arr as $endpoint) {
         CURLOPT_HTTPHEADER => array('Accept: application/json')
     ));
     // Send the request & save response
-    if( $sameAsObjects = curl_exec($curl) ){
-        echo "CURL EXECUTED@2<br>";
+    if(! $sameAsObjects = curl_exec($curl) ){
+        echo "CURL FAILED@2<br>";
     };
     // Decode json response into array
     $sameAsObjects_arr = json_decode($sameAsObjects, true);
